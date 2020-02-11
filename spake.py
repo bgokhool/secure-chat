@@ -26,7 +26,7 @@ class SPAKE():
         self.compute_hash_key()
 
     def compute_x(self):
-        self.x = randint(self.g, self.p-1)
+        self.x = randint(1, self.p-1)
 
     def compute_x_upper(self):
         self.x_upper = r.fast_exp_w_mod(self.g, self.x, self.p)

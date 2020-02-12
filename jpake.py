@@ -35,11 +35,27 @@ class JPAKE():
         return self.gx2
 
     def send_first(self):
-        return (self.gx1, self.gx2)
+        pfx1 = self.zkp_for(self.x_1)
+        return (self.gx1, self.gx2, pfx1)
+
+    def my_hash(self, g, g1, g2):
+        return (g*g1*g2)%self.q
+
+    def verify_zkp(self, pf_val):
+        gv = pf_val[0]
+        r_val = pf_val[1]
+        # I am having problems with this hashing
+        # I don't know what type of hashing they are expecting in the paper
+        h = self.my_hash(self.g, gv, self.gx3)
+        gr = r.fast_exp_w_mod(self.g, r_val, self.q)
+        gxh = r.fast_exp_w_mod(self.gx3, h, self.q)
+        grxh = (gr*gxh)%self.q
+        print(gv == grxh)
 
     def get_first(self, gx3gx4):
         self.gx3 = gx3gx4[0]
         self.gx4 = gx3gx4[1]
+        self.verify_zkp(gx3gx4[2])
 
     def computeA(self):
         g_product = (((self.gx1 * self.gx3)%self.q)*self.gx4)%self.q
@@ -69,9 +85,11 @@ class JPAKE():
         v = self.get_rand_val_mod_q()
         gv = r.fast_exp_w_mod(self.g, v, self.q)
         gx = r.fast_exp_w_mod(self.g, x_val, self.q)
-        h = H(self.g, gv, gx)
-        r = v-(x_val*h)
-        return (gv, r)
+        # I am having problems with this hashing
+        # I don't know what type of hashing they are expecting in the paper
+        h = self.my_hash(self.g, gv, gx)
+        r_val = v-(x_val*h)
+        return (gv, r_val)
 
 if __name__ == "__main__":
     alice = JPAKE(4)

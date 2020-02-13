@@ -32,7 +32,7 @@ class SPAKE():
         self.x_upper = r.fast_exp_w_mod(self.g, self.x, self.p)
 
     def compute_x_star(self):
-        self.x_star = self.x_upper * r.fast_exp_w_mod(self.M, self.pw, self.p)
+        self.x_star = (self.x_upper * r.fast_exp_w_mod(self.M, self.pw, self.p))%self.p
 
     def get_x_star(self):
         return self.x_star
@@ -42,7 +42,9 @@ class SPAKE():
 
     def compute_key(self):
         n_pw = r.fast_exp_w_mod(self.N, self.pw, self.p)
-        tmp = self.y_star/n_pw
+        gcd, x, y = r.egcd(n_pw, self.p)
+        n_pw_inverse = x
+        tmp = (self.y_star*n_pw_inverse)%self.p
         the_key = r.fast_exp_w_mod(tmp, self.x, self.p)
         self.key = str(the_key)
 

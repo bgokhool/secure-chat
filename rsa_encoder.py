@@ -2,10 +2,20 @@ from Crypto.Random import random
 from random import randint
 
 def gcd(a,b):
+    # a > b
     if(b==0):
         return a
     else:
         return gcd(b,a%b)
+
+# Extended Euclidean Algorithm
+def egcd(a, b):
+    # b > a
+	if a == 0:
+		return (b, 0, 1)
+	else:
+		gcd, x, y = egcd(b % a, a)
+		return (gcd, y - (b//a) * x, x)
 
 
 def key_gen(p = 7, q = 29):
@@ -124,3 +134,5 @@ if __name__ == "__main__":
 
     exp_e = fast_exponentiation(2,7)
     print(exp_e)
+    gcd, x, y = egcd(3, 50)
+    print(gcd, x, y)

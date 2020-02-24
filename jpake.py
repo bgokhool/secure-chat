@@ -85,6 +85,7 @@ class JPAKE():
         v = self.get_rand_val_mod_q()
         gv = r.fast_exp_w_mod(self.g, v, self.q)
         gx = r.fast_exp_w_mod(self.g, x_val, self.q)
+
         # I am having problems with this hashing
         # I don't know what type of hashing they are expecting in the paper
         h = self.my_hash(self.g, gv, gx)

@@ -18,6 +18,7 @@ This script could be expanded for a better chat application in the future.
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import spake
+import datetime
 
 
 class Client_A():
@@ -60,16 +61,24 @@ class Client_A():
                     pw_num = (pw_num + ord(c)) % spake.SPAKE.p
 
                 # start up key exchange
+                start = datetime.datetime.now()
+                print("Microseconds at Start: ", start.microsecond)
                 alice_spake = spake.SPAKE(pw_num)
                 alice_spake_x = alice_spake.get_x_star()
+
                 print("Alice's X*", alice_spake_x)
                 client.send(bytes(str(alice_spake_x), "utf-8"))
                 msg = client.recv(self.BUFSIZ)
                 stringmsg = msg.decode('utf-8')
+
                 bob_spake_y = int(stringmsg)
                 print("Bob's Y*", bob_spake_y)
                 alice_spake.complete_exchange(bob_spake_y)
-
+                end = datetime.datetime.now()
+                print("Microseconds at End: ", end.microsecond)
+                time_duration = (end.second - start.second)*1000000 +\
+                                end.microsecond - start.microsecond
+                print("The time duration was: ", time_duration)
                 print(alice_spake.get_hex_key())
 
 

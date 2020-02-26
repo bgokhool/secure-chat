@@ -6,10 +6,8 @@ from random import randint, choice
 from hashlib import sha3_512 as H
 
 class SPAKE():
-
-    G = [2, 4, 8, 5, 10, 9, 7, 3, 6, 1]
-    g = 2
-    p = 11
+    g = 7
+    p = 71
     pw = 2
     M = N = 5
     hkey = key = x = x_upper = x_star = y_star = None

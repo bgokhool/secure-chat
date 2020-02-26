@@ -17,6 +17,12 @@ def egcd(a, b):
 		gcd, x, y = egcd(b % a, a)
 		return (gcd, y - (b//a) * x, x)
 
+def sum_digits(n):
+    s = 0
+    while n:
+        s += n % 10
+        n //= 10
+    return s
 
 def key_gen(p = 7, q = 29):
     n = p*q

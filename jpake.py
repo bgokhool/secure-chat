@@ -7,10 +7,9 @@ import rsa_encoder as r
 
 class JPAKE():
 
-    G = [2, 4, 8, 5, 10, 9, 7, 3, 6, 1]
-    g = 2
-    q = 11
-    pw = 2
+    g = 7
+    q = 71
+    pw = 21
 
     def __init__(self, pw):
         self.pw = pw
@@ -56,6 +55,7 @@ class JPAKE():
         self.gx3 = gx3gx4[0]
         self.gx4 = gx3gx4[1]
         self.verify_zkp(gx3gx4[2])
+        self.computeA()
 
     def computeA(self):
         g_product = (((self.gx1 * self.gx3)%self.q)*self.gx4)%self.q
@@ -70,7 +70,11 @@ class JPAKE():
 
     def compute_key(self):
         g_to_x2x4s = r.fast_exp_w_mod(self.gx4, self.x2_times_s, self.q)
-        quotient = (self.B/g_to_x2x4s)%self.q
+
+        gcd, x, y = r.egcd(g_to_x2x4s, self.q)
+        g_to_x2x4s_inverse = x
+
+        quotient = (self.B*g_to_x2x4s_inverse)%self.q
         self.key = r.fast_exp_w_mod(quotient, self.x_2, self.q)
 
     def session_key(self):
@@ -82,9 +86,10 @@ class JPAKE():
         return self.sess_key.hexdigest()
 
     def zkp_for(self, x_val):
+        gx = r.fast_exp_w_mod(self.g, x_val, self.q)
+
         v = self.get_rand_val_mod_q()
         gv = r.fast_exp_w_mod(self.g, v, self.q)
-        gx = r.fast_exp_w_mod(self.g, x_val, self.q)
 
         # I am having problems with this hashing
         # I don't know what type of hashing they are expecting in the paper
@@ -99,9 +104,6 @@ if __name__ == "__main__":
     bob_gx3gx4 = bob.send_first()
     alice.get_first(bob_gx3gx4)
     bob.get_first(alice_gx1gx2)
-
-    alice.computeA()
-    bob.computeA()
     alice_A = alice.send_second()
     bob_B = bob.send_second()
     alice.get_second(bob_B)

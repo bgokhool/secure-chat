@@ -11,12 +11,27 @@ class JPAKE():
     q = 71
     pw = 21
 
-    def __init__(self, pw):
+    def __init__(self, pw, signerID):
+        self.clientId = signerID
+        self.setSignerID(signerID)
         self.pw = pw
         self.x_1 = self.get_rand_val_mod_q()
         self.x_2 = self.get_rand_val_mod_q()
         self.compute_gx1()
         self.compute_gx2()
+
+    def setSignerID(self, someID):
+        value = 0
+        for char in someID:
+            value = (value +ord(char))%self.q
+        self.signerID = value
+        print(str(self.clientId)+ "'s signer ID is:", self.signerID)
+
+    def getSignerID(self):
+        return self.signerID
+
+    def storeOtherID(self, signerID):
+        self.otherSignerID = signerID
 
     def get_rand_val_mod_q(self):
          return randint(1, self.q-1)
@@ -37,24 +52,40 @@ class JPAKE():
         pfx1 = self.zkp_for(self.x_1)
         return (self.gx1, self.gx2, pfx1)
 
-    def my_hash(self, g, g1, g2):
-        return (g*g1*g2)%self.q
+    def my_hash(self, gv, gx_i, signerID):
+        """ signerID is a string """
+        g_product = (self.g*gv*gx_i)%self.q
+        int_signerID = int(signerID)
+        int_hash = r.fast_exp_w_mod(g_product, int_signerID, self.q)
+        sha_hashing = H(int_hash.to_bytes(2, "big"))
+        sha_hashing_int = int(sha_hashing.hexdigest(), 16)
+        num = sha_hashing_int
+        while num > 10:
+            num = r.sum_digits(num)
 
-    def verify_zkp(self, pf_val):
+        print("The h value is", num)
+        return num
+
+    def verify_zkp(self, pf_val, some_gx):
         gv = pf_val[0]
         r_val = pf_val[1]
-        # I am having problems with this hashing
-        # I don't know what type of hashing they are expecting in the paper
-        h = self.my_hash(self.g, gv, self.gx3)
-        gr = r.fast_exp_w_mod(self.g, r_val, self.q)
-        gxh = r.fast_exp_w_mod(self.gx3, h, self.q)
+        h = self.my_hash(gv, some_gx, self.otherSignerID)
+
+        if r_val >= 0:
+            gr = r.fast_exp_w_mod(self.g, r_val, self.q)
+        else:
+            gr_inverse = r.fast_exp_w_mod(self.g, -r_val, self.q)
+            gcd, x, y =r.egcd(gr_inverse, self.q)
+            gr = x
+        gxh = r.fast_exp_w_mod(some_gx, h, self.q)
         grxh = (gr*gxh)%self.q
         print(gv == grxh)
+        return gv == grxh
 
     def get_first(self, gx3gx4):
         self.gx3 = gx3gx4[0]
         self.gx4 = gx3gx4[1]
-        self.verify_zkp(gx3gx4[2])
+        self.verify_zkp(gx3gx4[2], self.gx3)
         self.computeA()
 
     def computeA(self):
@@ -93,13 +124,18 @@ class JPAKE():
 
         # I am having problems with this hashing
         # I don't know what type of hashing they are expecting in the paper
-        h = self.my_hash(self.g, gv, gx)
+        h = self.my_hash(gv, gx, self.signerID)
         r_val = v-(x_val*h)
+        print(str(self.clientId) + "'s r value:", r_val)
         return (gv, r_val)
 
 if __name__ == "__main__":
-    alice = JPAKE(4)
-    bob = JPAKE(4)
+    alice = JPAKE(4, "Alice")
+    bob = JPAKE(4, "Bob")
+
+    alice.storeOtherID(bob.getSignerID())
+    bob.storeOtherID(alice.getSignerID())
+
     alice_gx1gx2 = alice.send_first()
     bob_gx3gx4 = bob.send_first()
     alice.get_first(bob_gx3gx4)

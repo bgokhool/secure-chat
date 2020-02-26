@@ -13,7 +13,7 @@ class SPAKE():
     hkey = key = x = x_upper = x_star = y_star = None
 
     def __init__(self, pw):
-        self.pw = pw
+        self.pw = pw % self.p
         self.compute_x()
         self.compute_x_upper()
         self.compute_x_star()
@@ -65,14 +65,22 @@ if __name__ == "__main__":
     # print(sha3_512_digest)
     # print('Printing hexadecimal output')
     # print(sha3_512_hex_digest)
-    a = SPAKE(4)
-    b = SPAKE(4)
-    a_xstar = a.get_x_star()
-    b_ystar = b.get_x_star()
-    str_astar = str(a_xstar)
-    str_bstar = str(b_ystar)
-    a.complete_exchange(int(str_bstar))
-    b.complete_exchange(int(str_astar))
-    print(a.get_hex_key())
-    print(b.get_hex_key())
-    print(a.get_hex_key() == b.get_hex_key())
+    count_pass= count_fail = 0
+    for i in range(40):
+        a = SPAKE(i)
+        b = SPAKE(i)
+        a_xstar = a.get_x_star()
+        b_ystar = b.get_x_star()
+        str_astar = str(a_xstar)
+        str_bstar = str(b_ystar)
+        a.complete_exchange(int(str_bstar))
+        b.complete_exchange(int(str_astar))
+        print(a.get_hex_key())
+        print(b.get_hex_key())
+        print(a.get_hex_key() == b.get_hex_key())
+        if a.get_hex_key() == b.get_hex_key():
+            count_pass += 1
+        else:
+            count_fail += 1
+    print("Numer passed: ", count_pass)
+    print("Numer failed: ", count_fail)

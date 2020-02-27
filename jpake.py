@@ -50,7 +50,8 @@ class JPAKE():
 
     def send_first(self):
         pfx1 = self.zkp_for(self.x_1)
-        return (self.gx1, self.gx2, pfx1)
+        pfx2 = self.zkp_for(self.x_2)
+        return (self.gx1, self.gx2, pfx1, pfx2)
 
     def my_hash(self, gv, gx_i, signerID):
         """ signerID is a string """
@@ -86,6 +87,7 @@ class JPAKE():
         self.gx3 = gx3gx4[0]
         self.gx4 = gx3gx4[1]
         self.verify_zkp(gx3gx4[2], self.gx3)
+        self.verify_zkp(gx3gx4[3], self.gx4)
         self.computeA()
 
     def computeA(self):
@@ -94,6 +96,7 @@ class JPAKE():
         self.A = r.fast_exp_w_mod(g_product, self.x2_times_s, self.q)
 
     def send_second(self):
+        pfx2_time_s = self.zkp_for(self.x2_times_s)
         return self.A
 
     def get_second(self, B):

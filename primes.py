@@ -8,7 +8,12 @@ import rsa_encoder as r
 
 
 class RandPrime():
-    """ Takes a length n to generate an n bits long prime number """
+    """
+    Takes a number n to generate an n-bit long prime number
+    with a corresponding generator
+
+    NOTE: 512 <= n <= 1024
+    """
 
     def __init__(self, n):
         self.n = n
@@ -22,7 +27,7 @@ class RandPrime():
 
 
 if __name__ == "__main__":
-    genprime = RandPrime(640)
+    genprime = RandPrime(1024)
     p = genprime.getPrime()
     g = genprime.getGenerator()
     print(p)

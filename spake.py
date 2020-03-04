@@ -4,15 +4,18 @@ This script will be used for the SPAKE protocol
 import rsa_encoder as r
 from random import randint, choice
 from hashlib import sha3_512 as H
+from Crypto.PublicKey import DSA
 
 class SPAKE():
-    g = 7
     p = 71
+    g = 7
     pw = 2
     M = N = 5
     hkey = key = x = x_upper = x_star = y_star = None
 
-    def __init__(self, pw):
+    def __init__(self, pw, prime, generator):
+        self.p = prime
+        self.g = generator
         self.pw = pw % self.p
         self.compute_x()
         self.compute_x_upper()
@@ -67,8 +70,9 @@ if __name__ == "__main__":
     # print(sha3_512_hex_digest)
     count_pass= count_fail = 0
     for i in range(40):
-        a = SPAKE(i)
-        b = SPAKE(i)
+        dsa = DSA.generate(512)
+        a = SPAKE(i, dsa.p, dsa.g)
+        b = SPAKE(i, dsa.p, dsa.g)
         a_xstar = a.get_x_star()
         b_ystar = b.get_x_star()
         str_astar = str(a_xstar)

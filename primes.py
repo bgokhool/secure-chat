@@ -36,18 +36,18 @@ if __name__ == "__main__":
     print(g)
     print(r.fast_exp_w_mod(g,p-1,p))
 
-mydict = {}
+primes_dict = {}
 for n in range(512, 1088, 64):
     dsa = DSA.generate(n)
     p_g_tuple = (dsa.p, dsa.g)
-    mydict[str(n)] = p_g_tuple
+    primes_dict[str(n)] = p_g_tuple
 
-# print(mydict["512"])
-# print(mydict["576"])
-# print(mydict["640"])
-# print(mydict["704"])
-# print(mydict["768"])
-# print(mydict["832"])
-# print(mydict["896"])
-# print(mydict["960"])
-# print(mydict["1024"])
+# print(primes_dict["512"])
+# print(primes_dict["576"])
+# print(primes_dict["640"])
+# print(primes_dict["704"])
+# print(primes_dict["768"])
+# print(primes_dict["832"])
+# print(primes_dict["896"])
+# print(primes_dict["960"])
+# print(primes_dict["1024"])

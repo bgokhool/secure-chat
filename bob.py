@@ -45,8 +45,11 @@ class Client_B():
         for c in self.COMMON_PW:
             pw_num = (pw_num + ord(c)) % spake.SPAKE.p
 
+        print("Bob: The common prime is: ", spake.SPAKE.p)
+        print("Bob: The common generator is: ", spake.SPAKE.g)
+
         # start up key exchange
-        bob_spake = spake.SPAKE(pw_num)
+        bob_spake = spake.SPAKE(pw_num, spake.SPAKE.p, spake.SPAKE.g)
         bob_spake_y = bob_spake.get_x_star()
         print("Bob's Y*", bob_spake_y)
         self.bob_socket.send(bytes(str(bob_spake_y), "utf-8"))

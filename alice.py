@@ -60,10 +60,13 @@ class Client_A():
                 for c in self.COMMON_PW:
                     pw_num = (pw_num + ord(c)) % spake.SPAKE.p
 
+                print("Alice: The common prime is: ", spake.SPAKE.p)
+                print("Alice: The common generator is: ", spake.SPAKE.g)
+
                 # start up key exchange
                 start = datetime.datetime.now()
                 print("Microseconds at Start: ", start.microsecond)
-                alice_spake = spake.SPAKE(pw_num)
+                alice_spake = spake.SPAKE(pw_num, spake.SPAKE.p, spake.SPAKE.g)
                 alice_spake_x = alice_spake.get_x_star()
 
                 print("Alice's X*", alice_spake_x)

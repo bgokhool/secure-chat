@@ -18,6 +18,7 @@ This script could be expanded for a better chat application in the future.
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import spake
+import primes
 
 class Client_B():
     ALICE = "Alice"
@@ -28,12 +29,15 @@ class Client_B():
     addresses = {}
 
     HOST = ''
-    PORT = 12345
+    PORT = 12351
     BUFSIZ = 1024
     addr = bob_socket = None
     stop_threads = False
 
-    def __init__(self):
+    def __init__(self, n):
+        self.n = n
+        self.p = primes.PRIMES[str(n)][0]
+        self.g = primes.PRIMES[str(n)][1]
         print("Trying to connect to %s..."% self.ALICE)
         addr = (self.HOST, self.PORT)
         self.bob_socket = socket(AF_INET, SOCK_STREAM)
@@ -43,13 +47,10 @@ class Client_B():
         # turn pw into a number mod
         pw_num = 0
         for c in self.COMMON_PW:
-            pw_num = (pw_num + ord(c)) % spake.SPAKE.p
-
-        print("Bob: The common prime is: ", spake.SPAKE.p)
-        print("Bob: The common generator is: ", spake.SPAKE.g)
+            pw_num = (pw_num + ord(c)) % self.p
 
         # start up key exchange
-        bob_spake = spake.SPAKE(pw_num, spake.SPAKE.p, spake.SPAKE.g)
+        bob_spake = spake.SPAKE(pw_num, self.p, self.g)
         bob_spake_y = bob_spake.get_x_star()
         print("Bob's Y*", bob_spake_y)
         self.bob_socket.send(bytes(str(bob_spake_y), "utf-8"))
@@ -125,4 +126,4 @@ class Client_B():
 
 
 if __name__ == "__main__":
-    Client_B()
+    Client_B(1024)

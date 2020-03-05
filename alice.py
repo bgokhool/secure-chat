@@ -19,6 +19,7 @@ from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import spake
 import datetime
+import primes
 
 
 class Client_A():
@@ -30,13 +31,16 @@ class Client_A():
     addresses = {}
 
     HOST = ''
-    PORT = 12345
+    PORT = 12351
     BUFSIZ = 1024
     addr = alice_socket = None
     stop_threads = False
 
 
-    def __init__(self):
+    def __init__(self, n):
+        self.n = n
+        self.p = primes.PRIMES[str(n)][0]
+        self.g = primes.PRIMES[str(n)][1]
         addr = (self.HOST, self.PORT)
         self.alice_socket = socket(AF_INET, SOCK_STREAM)
         self.alice_socket.bind(addr)
@@ -58,15 +62,12 @@ class Client_A():
                 # turn pw into a number mod
                 pw_num = 0
                 for c in self.COMMON_PW:
-                    pw_num = (pw_num + ord(c)) % spake.SPAKE.p
-
-                print("Alice: The common prime is: ", spake.SPAKE.p)
-                print("Alice: The common generator is: ", spake.SPAKE.g)
+                    pw_num = (pw_num + ord(c)) % self.p
 
                 # start up key exchange
                 start = datetime.datetime.now()
                 print("Microseconds at Start: ", start.microsecond)
-                alice_spake = spake.SPAKE(pw_num, spake.SPAKE.p, spake.SPAKE.g)
+                alice_spake = spake.SPAKE(pw_num, self.p, self.g)
                 alice_spake_x = alice_spake.get_x_star()
 
                 print("Alice's X*", alice_spake_x)
@@ -165,4 +166,4 @@ class Client_A():
 
 
 if __name__ == "__main__":
-    Client_A()
+    Client_A(1024)

@@ -4,14 +4,15 @@ This script will be used for the JPAKE protocol
 from hashlib import sha3_512 as H
 from random import randint, choice
 import rsa_encoder as r
+from Crypto.PublicKey import DSA
 
 class JPAKE():
 
-    g = 7
-    q = 71
     pw = 21
 
-    def __init__(self, pw, signerID):
+    def __init__(self, pw, signerID, prime=71, generator=7):
+        self.q = prime
+        self.g = generator
         self.clientId = signerID
         self.setSignerID(signerID)
         self.pw = pw
@@ -58,6 +59,11 @@ class JPAKE():
         g_product = (self.g*gv*gx_i)%self.q
         int_signerID = int(signerID)
         int_hash = r.fast_exp_w_mod(g_product, int_signerID, self.q)
+
+        # Adding this to decrease the size of the number to be hashed
+        # otherwise the to_bytes function does not work
+        int_hash = int_hash%10000
+
         sha_hashing = H(int_hash.to_bytes(2, "big"))
         sha_hashing_int = int(sha_hashing.hexdigest(), 16)
         num = sha_hashing_int
@@ -133,8 +139,9 @@ class JPAKE():
         return (gv, r_val)
 
 if __name__ == "__main__":
-    alice = JPAKE(4, "Alice")
-    bob = JPAKE(4, "Bob")
+    dsa = DSA.generate(512)
+    alice = JPAKE(4, "Alice", dsa.p, dsa.g)
+    bob = JPAKE(4, "Bob", dsa.p, dsa.g)
 
     alice.storeOtherID(bob.getSignerID())
     bob.storeOtherID(alice.getSignerID())

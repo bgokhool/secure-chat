@@ -50,8 +50,8 @@ class JPAKE():
         return self.gx2
 
     def send_first(self):
-        pfx1 = self.zkp_for(self.x_1)
-        pfx2 = self.zkp_for(self.x_2)
+        pfx1 = self.zkp_for(self.g, self.x_1)
+        pfx2 = self.zkp_for(self.g, self.x_2)
         return (self.gx1, self.gx2, pfx1, pfx2)
 
     def my_hash(self, gv, gx_i, signerID):
@@ -73,15 +73,15 @@ class JPAKE():
         print("The h value is", num)
         return num
 
-    def verify_zkp(self, pf_val, some_gx):
+    def verify_zkp(self, pf_val, some_gx, g):
         gv = pf_val[0]
         r_val = pf_val[1]
         h = self.my_hash(gv, some_gx, self.otherSignerID)
 
         if r_val >= 0:
-            gr = r.fast_exp_w_mod(self.g, r_val, self.q)
+            gr = r.fast_exp_w_mod(g, r_val, self.q)
         else:
-            gr_inverse = r.fast_exp_w_mod(self.g, -r_val, self.q)
+            gr_inverse = r.fast_exp_w_mod(g, -r_val, self.q)
             gcd, x, y =r.egcd(gr_inverse, self.q)
             gr = x
         gxh = r.fast_exp_w_mod(some_gx, h, self.q)
@@ -92,21 +92,23 @@ class JPAKE():
     def get_first(self, gx3gx4):
         self.gx3 = gx3gx4[0]
         self.gx4 = gx3gx4[1]
-        self.verify_zkp(gx3gx4[2], self.gx3)
-        self.verify_zkp(gx3gx4[3], self.gx4)
+        self.verify_zkp(gx3gx4[2], self.gx3, self.g)
+        self.verify_zkp(gx3gx4[3], self.gx4, self.g)
         self.computeA()
 
     def computeA(self):
-        g_product = (((self.gx1 * self.gx3)%self.q)*self.gx4)%self.q
+        self.own_g_product = (((self.gx1 * self.gx3)%self.q)*self.gx4)%self.q
         self.x2_times_s = self.x_2 * self.pw
-        self.A = r.fast_exp_w_mod(g_product, self.x2_times_s, self.q)
+        self.A = r.fast_exp_w_mod(self.own_g_product, self.x2_times_s, self.q)
 
     def send_second(self):
-        pfx2_time_s = self.zkp_for(self.x2_times_s)
-        return self.A
+        pfx2_time_s = self.zkp_for(self.own_g_product, self.x2_times_s)
+        return self.A, pfx2_time_s
 
-    def get_second(self, B):
-        self.B = B
+    def get_second(self, B_pfx4s):
+        self.B = B_pfx4s[0]
+        self.other_g_product = (((self.gx1 * self.gx3)%self.q)*self.gx2)%self.q
+        self.verify_zkp(B_pfx4s[1], self.B, self.other_g_product)
 
     def compute_key(self):
         g_to_x2x4s = r.fast_exp_w_mod(self.gx4, self.x2_times_s, self.q)
@@ -125,11 +127,11 @@ class JPAKE():
     def get_hex_key(self):
         return self.sess_key.hexdigest()
 
-    def zkp_for(self, x_val):
-        gx = r.fast_exp_w_mod(self.g, x_val, self.q)
+    def zkp_for(self, g, x_val):
+        gx = r.fast_exp_w_mod(g, x_val, self.q)
 
         v = self.get_rand_val_mod_q()
-        gv = r.fast_exp_w_mod(self.g, v, self.q)
+        gv = r.fast_exp_w_mod(g, v, self.q)
 
         # I am having problems with this hashing
         # I don't know what type of hashing they are expecting in the paper

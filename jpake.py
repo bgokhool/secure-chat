@@ -70,7 +70,7 @@ class JPAKE():
         while num > 10:
             num = r.sum_digits(num)
 
-        print("The h value is", num)
+        # print("The h value is", num)
         return num
 
     def verify_zkp(self, pf_val, some_gx, g):
@@ -86,7 +86,7 @@ class JPAKE():
             gr = x
         gxh = r.fast_exp_w_mod(some_gx, h, self.q)
         grxh = (gr*gxh)%self.q
-        print(gv == grxh)
+        # print(gv == grxh)
         return gv == grxh
 
     def get_first(self, gx3gx4):
@@ -137,31 +137,56 @@ class JPAKE():
         # I don't know what type of hashing they are expecting in the paper
         h = self.my_hash(gv, gx, self.signerID)
         r_val = v-(x_val*h)
-        print(str(self.clientId) + "'s r value:", r_val)
+        # print(str(self.clientId) + "'s r value:", r_val)
         return (gv, r_val)
 
+def convert_first_to_tuple(firstMsg):
+    firstls = firstMsg.split(",")
+    firstlst = [i.strip(" ()") for i in firstls]
+    gx1 = int(firstlst[0])
+    gx2 = int(firstlst[1])
+    pfx1 = (int(firstlst[2]), int(firstlst[3]))
+    pfx2 = (int(firstlst[4]), int(firstlst[5]))
+    return (gx1, gx2, pfx1, pfx2)
+
+def convert_second_to_tuple(secondMsg):
+    secondls = secondMsg.split(",")
+    secondlst = [i.strip(" ()") for i in secondls]
+    B = int(secondlst[0])
+    pfx4s = (int(secondlst[1]), int(secondlst[2]))
+    return (B, pfx4s)
+
 if __name__ == "__main__":
-    dsa = DSA.generate(512)
-    alice = JPAKE(4, "Alice", dsa.p, dsa.g)
-    bob = JPAKE(4, "Bob", dsa.p, dsa.g)
+    count_pass= count_fail = 0
+    for j in range(512, 1088, 64):
+        for i in range(50):
+            dsa = DSA.generate(j)
+            alice = JPAKE(4, "Alice", dsa.p, dsa.g)
+            bob = JPAKE(4, "Bob", dsa.p, dsa.g)
 
-    alice.storeOtherID(bob.getSignerID())
-    bob.storeOtherID(alice.getSignerID())
+            alice.storeOtherID(bob.getSignerID())
+            bob.storeOtherID(alice.getSignerID())
 
-    alice_gx1gx2 = alice.send_first()
-    bob_gx3gx4 = bob.send_first()
-    alice.get_first(bob_gx3gx4)
-    bob.get_first(alice_gx1gx2)
-    alice_A = alice.send_second()
-    bob_B = bob.send_second()
-    alice.get_second(bob_B)
-    bob.get_second(alice_A)
+            alice_gx1gx2 = alice.send_first()
+            bob_gx3gx4 = bob.send_first()
+            alice.get_first(bob_gx3gx4)
+            bob.get_first(alice_gx1gx2)
+            alice_A = alice.send_second()
+            bob_B = bob.send_second()
+            alice.get_second(bob_B)
+            bob.get_second(alice_A)
 
-    alice.compute_key()
-    bob.compute_key()
-    alice.session_key()
-    bob.session_key()
+            alice.compute_key()
+            bob.compute_key()
+            alice.session_key()
+            bob.session_key()
 
-    print(alice.get_hex_key())
-    print(bob.get_hex_key())
-    print(alice.get_hex_key() == bob.get_hex_key())
+            print(alice.get_hex_key())
+            print(bob.get_hex_key())
+            print(alice.get_hex_key() == bob.get_hex_key())
+            if alice.get_hex_key() == bob.get_hex_key():
+                count_pass += 1
+            else:
+                count_fail += 1
+    print("Numer passed: ", count_pass)
+    print("Numer failed: ", count_fail)

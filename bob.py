@@ -19,6 +19,7 @@ from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import spake
 import primes
+import time
 
 class Client_B():
     ALICE = "Alice"
@@ -29,7 +30,7 @@ class Client_B():
     addresses = {}
 
     HOST = ''
-    PORT = 12351
+    PORT = 12349
     BUFSIZ = 1024
     addr = bob_socket = None
     stop_threads = False
@@ -49,18 +50,20 @@ class Client_B():
         for c in self.COMMON_PW:
             pw_num = (pw_num + ord(c)) % self.p
 
-        # start up key exchange
-        bob_spake = spake.SPAKE(pw_num, self.p, self.g)
-        bob_spake_y = bob_spake.get_x_star()
-        print("Bob's Y*", bob_spake_y)
-        self.bob_socket.send(bytes(str(bob_spake_y), "utf-8"))
-        msg = self.bob_socket.recv(self.BUFSIZ)
-        stringmsg = msg.decode('utf-8')
-        alice_spake_x = int(stringmsg)
-        print("Alice's X*", alice_spake_x)
-        bob_spake.complete_exchange(alice_spake_x)
+        for i in range(10):
+            # start up key exchange
+            bob_spake = spake.SPAKE(pw_num, self.p, self.g)
+            bob_spake_y = bob_spake.get_x_star()
+            print("Bob's Y*", bob_spake_y)
+            self.bob_socket.send(bytes(str(bob_spake_y), "utf-8"))
+            msg = self.bob_socket.recv(self.BUFSIZ)
+            stringmsg = msg.decode('utf-8')
+            alice_spake_x = int(stringmsg)
+            print("Alice's X*", alice_spake_x)
+            bob_spake.complete_exchange(alice_spake_x)
 
-        print(bob_spake.get_hex_key())
+            print(bob_spake.get_hex_key())
+            time.sleep(3)
 
         ACCEPT_THREAD = Thread(target=self.handle)
         ACCEPT_THREAD.start()

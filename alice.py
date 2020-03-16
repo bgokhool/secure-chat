@@ -20,6 +20,7 @@ from threading import Thread
 import spake
 import datetime
 import primes
+import time
 
 
 class Client_A():
@@ -31,7 +32,7 @@ class Client_A():
     addresses = {}
 
     HOST = ''
-    PORT = 12351
+    PORT = 12349
     BUFSIZ = 1024
     addr = alice_socket = None
     stop_threads = False
@@ -64,26 +65,28 @@ class Client_A():
                 for c in self.COMMON_PW:
                     pw_num = (pw_num + ord(c)) % self.p
 
-                # start up key exchange
-                start = datetime.datetime.now()
-                print("Microseconds at Start: ", start.microsecond)
-                alice_spake = spake.SPAKE(pw_num, self.p, self.g)
-                alice_spake_x = alice_spake.get_x_star()
+                for i in range(10):
+                    # start up key exchange
+                    os_start = time.process_time()
+                    alice_spake = spake.SPAKE(pw_num, self.p, self.g)
+                    alice_spake_x = alice_spake.get_x_star()
 
-                print("Alice's X*", alice_spake_x)
-                client.send(bytes(str(alice_spake_x), "utf-8"))
-                msg = client.recv(self.BUFSIZ)
-                stringmsg = msg.decode('utf-8')
+                    # print("Alice's X*", alice_spake_x)
+                    client.send(bytes(str(alice_spake_x), "utf-8"))
+                    msg = client.recv(self.BUFSIZ)
+                    stringmsg = msg.decode('utf-8')
 
-                bob_spake_y = int(stringmsg)
-                print("Bob's Y*", bob_spake_y)
-                alice_spake.complete_exchange(bob_spake_y)
-                end = datetime.datetime.now()
-                print("Microseconds at End: ", end.microsecond)
-                time_duration = (end.second - start.second)*1000000 +\
-                                end.microsecond - start.microsecond
-                print("The time duration was: ", time_duration)
-                print(alice_spake.get_hex_key())
+                    bob_spake_y = int(stringmsg)
+                    # print("Bob's Y*", bob_spake_y)
+                    alice_spake.complete_exchange(bob_spake_y)
+                    os_end = time.process_time()
+                    duration = os_end - os_start # in seconds
+                    # print("The process time in microseconds was", duration*1000000)
+                    print(duration*1000000)
+                    # end of key exchange
+                    # print(alice_spake.get_hex_key())
+
+                    time.sleep(3)
 
 
                 welcome_msg = "Hello! You have connected to %s"% self.ALICE

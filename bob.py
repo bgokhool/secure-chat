@@ -50,7 +50,8 @@ class Client_B():
         for c in self.COMMON_PW:
             pw_num = (pw_num + ord(c)) % self.p
 
-        for i in range(10):
+        for i in range(100):
+            print(i)
             # start up key exchange
             bob_spake = spake.SPAKE(pw_num, self.p, self.g)
             bob_spake_y = bob_spake.get_x_star()

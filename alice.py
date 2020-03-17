@@ -65,9 +65,11 @@ class Client_A():
                 for c in self.COMMON_PW:
                     pw_num = (pw_num + ord(c)) % self.p
 
-                for i in range(10):
+                for i in range(100):
                     # start up key exchange
                     os_start = time.process_time()
+                    start = datetime.datetime.now()
+
                     alice_spake = spake.SPAKE(pw_num, self.p, self.g)
                     alice_spake_x = alice_spake.get_x_star()
 
@@ -80,9 +82,15 @@ class Client_A():
                     # print("Bob's Y*", bob_spake_y)
                     alice_spake.complete_exchange(bob_spake_y)
                     os_end = time.process_time()
+                    end = datetime.datetime.now()
+
+                    clock_duration = (end.second - start.second) + end.microsecond - start.microsecond
                     duration = os_end - os_start # in seconds
                     # print("The process time in microseconds was", duration*1000000)
-                    print(duration*1000000)
+                    print(round(duration*1000000))
+
+                    # print("Clock time", clock_duration)
+
                     # end of key exchange
                     # print(alice_spake.get_hex_key())
 
